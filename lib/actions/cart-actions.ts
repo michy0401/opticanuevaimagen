@@ -1,10 +1,29 @@
 'use server';
 import { cookies } from "next/headers";
 import { CartItem } from "@/types";
-import { convertTOPlainObject, formatError } from "../utils";
+import { convertTOPlainObject, formatError, round2 } from "../utils";
 import { auth } from "@/auth";
 import { prisma } from "@/db/prisma";
-import { cartItemSchema } from "../validators";
+import { cartItemSchema, insertCartSchema } from "../validators";
+import { revalidatePath } from "next/cache";
+
+//calcualte cart prices
+
+const calcPrice = (items: CartItem[]) => {
+    const itemsPrice = round2(
+        items.reduce((acc, item)=> acc + Number(item.price) * item.qty, 0)
+    ),
+    shippingPrice = round2(itemsPrice > 100 ? 0: 10),
+    taxPrice = round2(0.15 * itemsPrice),
+    totalPrice = round2(itemsPrice + taxPrice + shippingPrice);
+
+    return{
+        itemsPrice: itemsPrice.toFixed(2),
+        shippingPrice: shippingPrice.toFixed(2),
+        taxPrice: taxPrice.toFixed(2),
+        totalPrice: totalPrice.toFixed(2),
+    }
+}
 
 
 export async function addItemToCart(data:CartItem) {
@@ -27,21 +46,32 @@ export async function addItemToCart(data:CartItem) {
         const product = await prisma.product.findFirst({
             where: {id: item.productId}
         })
-        
-        //testing
-        console.log({
-            'Session cart id': sessionCartId,
-            'user id': userId,
-            'Item requested': item,
-            'Product found': product
-        });
-        
 
-        return {
-            success:true,
-            message: 'Item added to cart'
-        };
-    
+        if (!product) throw new Error ('Product not found');
+
+        if (!cart) {
+            // create new cart object
+            const newCart = insertCartSchema.parse({
+                userId: userId,
+                items: [item],
+                sessionCartId: sessionCartId,
+                ...calcPrice([item]),
+            });
+            //add to database
+            await prisma.cart.create({
+                data: newCart
+            });
+
+            //revalidate product page
+            revalidatePath(`/product/${product.slug}`)
+
+            return {
+                success:true,
+                message: 'Item added to cart'
+            };
+        } else{
+            
+        }
     } catch (error) {
         
         return {
