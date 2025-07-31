@@ -13,7 +13,7 @@ export async function signInWithCredentials(prevState: unknown, formData: FormDa
         });
 
         await signIn('credentials', user);
-        return{success:true, message: 'Signed uin successfully'}
+        return {success:true, message: 'Signed in successfully'}
     } catch(error){
         if(isRedirectError(error)){
             throw error;

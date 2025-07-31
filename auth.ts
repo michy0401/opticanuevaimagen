@@ -9,6 +9,7 @@ export const config ={
     pages: {
         signIn: '/sign-in',
         error: '/sign-in', // Error code passed in query string as ?error=
+        signOut: '/', 
     },
     session:{
         strategy: 'jwt',
@@ -19,7 +20,7 @@ export const config ={
         CredentialsProvider({
             credentials:{
                 email: {type: 'email'},
-                password: {type: 'password'}            
+                password: {type: 'password'}
             },
             async authorize(credentials){
                 if(credentials == null) return null;
@@ -66,6 +67,13 @@ export const config ={
             return session
         },
     },
+
+    events: {
+        async signOut() {
+            // Limpieza adicional si es necesaria
+        },
+    },
+    
 } satisfies NextAuthConfig;
 
 export const {handlers, auth, signIn, signOut} = NextAuth(config);
