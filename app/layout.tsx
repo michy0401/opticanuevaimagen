@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "@/assets/styles/globals.css";
 import {APP_NAME, APP_DESCRIPTION, SERVER_URL} from "@/lib/constants";
 import { ThemeProvider} from "next-themes";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
   variable: "--font-geist-sans",
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
           <ThemeProvider attribute='class' defaultTheme='light' enableSystem disableTransitionOnChange>
             {children}
+            <Toaster></Toaster>
           </ThemeProvider>
           
       </body>
