@@ -33,7 +33,7 @@ const SignUpForm = () => {
         <div className="space-y-6">
             <div>
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" name="name" type="text" required autoComplete="name"
+                <Input id="name" name="name" type="text"  autoComplete="name"
                 defaultValue={signUpDefaultValues.name}/>
             </div>
             <div>
