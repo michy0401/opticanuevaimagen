@@ -23,3 +23,9 @@ export const insertProductScheme = z.object({
     price: currency,
 });
 
+
+//schema for sign in
+export const signInFormScheme = z.object({
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters')
+});
