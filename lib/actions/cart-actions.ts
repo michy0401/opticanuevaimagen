@@ -70,7 +70,7 @@ export async function addItemToCart(data:CartItem) {
                 message: 'Item added to cart'
             };
         } else{
-            
+
         }
     } catch (error) {
         
