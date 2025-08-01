@@ -92,7 +92,7 @@ const CartTable = ({cart}: {cart?: Cart}) => {
                             Subtotal({ cart. items.reduce((a,c) => a+ c.qty, 0)}):
                             <span className="font-bold">{formatCurrency(cart.itemsPrice)}</span>
                         </div>
-                        <Button className='w-full' disabled={isPending} onClick={() => startTransition(() =>router.push('/shipping-addres'))}>
+                        <Button className='w-full' disabled={isPending} onClick={() => startTransition(() =>router.push('/shipping-address'))}>
                             {isPending ? (
                                 <Loader className='w-4 h-4 animate-spin' />
                             ):(
