@@ -78,6 +78,7 @@ export const config ={
         async jwt({token, user, trigger, session}:any){
             //assign user field to token 
             if(user){
+                token.id = user.id;
                 token.role = user.role;
 
                 //user has no name the use the email
@@ -88,7 +89,31 @@ export const config ={
                     await prisma.user.update({
                         where: {id: user.id},
                         data: {name: token.name}
-                    })
+                    });
+                }
+
+                if (trigger === 'signIn' || trigger === 'signUp'){
+                    const cookiesObject = await cookies();
+                    const sessionCartId  = cookiesObject.get('sessionCartId')?.value;
+
+                    if ( sessionCartId){
+                        const sessionCart = await prisma.cart.findFirst({
+                            where: {sessionCartId}
+                        });
+
+                        if (sessionCart){
+                            //delete current cart
+                            await prisma.cart.deleteMany({
+                                where: {userId: user.id}
+                            });
+
+                            //assign new cart
+                            await prisma.cart.update({
+                                where: {id: sessionCart.id},
+                                data: {userId: user.id}
+                            })
+                        }
+                    }
                 }
 
             }
@@ -97,6 +122,25 @@ export const config ={
 
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         authorized({ request, auth}: any){
+
+            //array of regex patterns of paths we want to protect
+            const protectedPaths =[ 
+                /\/shipping-address/,
+                /\/payment-method/,
+                /\/place-order/,
+                /\/profile/,
+                /\/user\/(.*)/,
+                /\/order\/(.*)/,
+                /\/admin/,
+            ];
+
+            //get path name from the request url object
+            const {pathname}= request.nextUrl;
+
+            //check if user is not authenticated and accesing protected route
+             if (!auth && protectedPaths.some((p)=> p.test(pathname))) return false;
+            
+
             //check for session cart cookie
             if (!request.cookies.get ('sessionCartId')) {
                 //generate new session cart id cookie
@@ -105,7 +149,7 @@ export const config ={
                 //clone the requested header
                 const newRequestHeaders = new Headers(request.headers);
 
-                //create mew response and add the new headers
+                //create new response and add the new headers
                 const response = NextResponse.next({
                     request:{
                         headers: newRequestHeaders
