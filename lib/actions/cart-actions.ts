@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/db/prisma";
 import { cartItemSchema, insertCartSchema } from "../validators";
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 
 //calcualte cart prices
 
@@ -31,6 +32,7 @@ export async function addItemToCart(data:CartItem) {
         //check for cart cookie
         const sessionCartId = (await cookies()).get('sessionCartId')?.value;
         if(!sessionCartId) throw new Error('Cart session not found');
+        
 
         //get session and user id
         const session = await auth();
@@ -67,13 +69,45 @@ export async function addItemToCart(data:CartItem) {
 
             return {
                 success:true,
-                message: 'Item added to cart'
+                message: `${product.name} added to cart`
             };
-        } else{
 
+        } else{
+            //check if item is already in cart
+            const existItem = (cart.items as CartItem[]).find((x) => x.productId ===item.productId);
+            if (existItem) {
+                //check stock
+                if (product.stock < existItem.qty + 1 ){ 
+                    throw new Error('Not enough stock');
+                    }
+                //increase te qty
+                (cart.items as CartItem[]).find((x)=> x.productId === item.productId)!.qty = existItem.qty +1;
+            }else{
+                //if the item doesnot exist
+                //check stock
+                if(product.stock < 1) throw new Error('Not enough stock')
+
+                //add item to the cart.items
+                cart.items.push(item);
+            }
+
+            //save to database
+            await prisma.cart.update({
+                where: {id: cart.id},
+                data: {
+                    items: cart.items as Prisma.CartUpdateitemsInput[],
+                    ...calcPrice(cart.items as CartItem[])
+                }
+            });
+
+            revalidatePath(`/product/${product.slug}`);
+
+            return { 
+                success: true,
+                message: `${product.name} ${existItem ? 'updated in': 'added to'} cart`
+            }
         }
     } catch (error) {
-        
         return {
             success:false,
             message: formatError(error)
