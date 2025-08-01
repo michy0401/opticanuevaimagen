@@ -21,9 +21,9 @@ export const signUpDefaultValues = {
 };
 
 export const shippingAddressDefaultValues = {
-    fullName: 'Michelle Argueta',
-    streetAddress: '123 main street',
-    city: 'lourdes',
-    postalCode: '123458',
-    country: 'El Salvador'
+    fullName: '',
+    streetAddress: '',
+    city: '',
+    postalCode: '',
+    country: ''
 } 
